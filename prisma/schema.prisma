@@ -1,15 +1,15 @@
-datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
-}
-
-generator client {
-  provider = "prisma-client-js"
-}
+// prisma/schema.prisma
 
 model User {
-  id        Int      @id @default(autoincrement())
-  email     String   @unique
-  password  String
-  createdAt DateTime @default(now())
+  id       Int       @id @default(autoincrement())
+  email    String    @unique
+  contacts Contact[] // One user has many contacts
+  password String
+}
+
+model Contact {
+  id      Int    @id @default(autoincrement())
+  email   String
+  userId  Int
+  user    User   @relation(fields: [userId], references: [id])
 }

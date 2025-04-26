@@ -1,6 +1,5 @@
-import { clsx, type ClassValue } from "clsx"
-import { twMerge } from "tailwind-merge"
+// lib/prisma.ts
+import { PrismaClient } from "@/lib/prisma";
 
-export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs))
-}
+const prisma = new PrismaClient();
+export default prisma;
