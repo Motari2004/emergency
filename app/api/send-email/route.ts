@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { Resend } from "resend";
 
-// Initialize Resend with your API key from .env
+// Initialize Resend with your API key
 const resend = new Resend(process.env.RESEND_API_KEY!);
 
 export async function POST(request: Request) {
@@ -12,17 +12,22 @@ export async function POST(request: Request) {
       return NextResponse.json({ message: "Missing required fields" }, { status: 400 });
     }
 
-    // Send an email to each contact
-    const sendEmailPromises = contacts.map((contact: string) => {
-      return resend.emails.send({
-        from: process.env.RESEND_EMAIL_FROM!, // <-- Pull from env, don't hardcode
-        to: contact,
-        subject: "Emergency Alert",
-        text: `🚨 Emergency Alert 🚨\n\n${message}\n\n📍 Location:\nLatitude: ${location.latitude}\nLongitude: ${location.longitude}`,
-      });
-    });
+    // Prepare emails for batch sending
+    const batchEmails = contacts.map((contact: string) => ({
+      from: process.env.RESEND_EMAIL_FROM!, // Your domain-verified email (example: alerts@yourdomain.com)
+      to: [contact],
+      subject: "🚨 Emergency Alert",
+      html: `
+        <h2>🚨 Emergency Alert 🚨</h2>
+        <p>${message}</p>
+        <p><strong>Location:</strong><br/>
+        Latitude: ${location.latitude}<br/>
+        Longitude: ${location.longitude}</p>
+      `,
+    }));
 
-    await Promise.all(sendEmailPromises);
+    // Send batch emails
+    await resend.batch.send(batchEmails);
 
     return NextResponse.json({ message: "Emails sent successfully" }, { status: 200 });
   } catch (error: any) {

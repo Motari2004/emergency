@@ -1,34 +1,34 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { AlertCircle } from "lucide-react"
-import { useToast } from "@/hooks/use-toast"
+import { useState } from "react";
+import { AlertCircle } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 export default function EmergencyButton() {
-  const [isActivating, setIsActivating] = useState(false)
-  const [countdown, setCountdown] = useState(3)
-  const [isSending, setIsSending] = useState(false)
-  const { toast } = useToast()
+  const [isActivating, setIsActivating] = useState(false);
+  const [countdown, setCountdown] = useState(3);
+  const [isSending, setIsSending] = useState(false);
+  const { toast } = useToast();
 
   const handleEmergencyClick = () => {
-    setIsActivating(true)
+    setIsActivating(true);
 
     const timer = setInterval(() => {
       setCountdown((prev) => {
         if (prev <= 1) {
-          clearInterval(timer)
-          triggerEmergency()
-          return 0
+          clearInterval(timer);
+          triggerEmergency();
+          return 0;
         }
-        return prev - 1
-      })
-    }, 1000)
-  }
+        return prev - 1;
+      });
+    }, 1000);
+  };
 
   const cancelEmergency = () => {
-    setIsActivating(false)
-    setCountdown(3)
-  }
+    setIsActivating(false);
+    setCountdown(3);
+  };
 
   interface Contact {
     name: string;
@@ -40,83 +40,80 @@ export default function EmergencyButton() {
     longitude: number;
   }
 
-  const sendEmailAlert = async (contacts: Contact[], location: Location): Promise<any> => {
+  const sendEmailAlert = async (contacts: Contact[], location: Location) => {
     try {
-      // Call to backend to send emails
-      const response = await fetch('/api/send-email', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+      const response = await fetch("/api/send-email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          contacts: contacts,
-          location: location,
+          contacts: contacts.map((contact) => contact.email),
+          location,
           message: "Emergency alert: Immediate attention needed.",
         }),
       });
 
       if (!response.ok) {
-        throw new Error('Failed to send email');
+        throw new Error("Failed to send email");
       }
 
-      return response.json();
+      return await response.json();
     } catch (error) {
       console.error("Error sending email alert:", error);
       throw error;
     }
-  }
+  };
 
   const triggerEmergency = async () => {
-    setIsSending(true)
+    setIsSending(true);
 
     try {
-      const contacts = JSON.parse(localStorage.getItem("emergencyContacts") || "[]")
+      const contacts: Contact[] = JSON.parse(localStorage.getItem("emergencyContacts") || "[]");
 
       if (contacts.length === 0) {
         toast({
           title: "No emergency contacts found",
-          description: "Please add emergency contacts in settings",
+          description: "Please add emergency contacts in settings.",
           variant: "destructive",
-        })
-        setIsActivating(false)
-        setCountdown(3)
-        setIsSending(false)
-        return
+        });
+        resetButton();
+        return;
       }
 
-      // Get current location
       if (!navigator.geolocation) {
-        throw new Error("Geolocation is not supported by your browser")
+        throw new Error("Geolocation is not supported by your browser.");
       }
 
       navigator.geolocation.getCurrentPosition(
         async (position) => {
-          const { latitude, longitude } = position.coords
+          const { latitude, longitude } = position.coords;
 
-          // Send emergency alert via email
-          await sendEmailAlert(contacts, { latitude, longitude })
+          await sendEmailAlert(contacts, { latitude, longitude });
 
           toast({
-            title: "Emergency alert sent",
-            description: `Alert sent to ${contacts.length} emergency contacts`,
-          })
+            title: "Emergency alert sent!",
+            description: `Alert sent to ${contacts.length} emergency contacts.`,
+          });
         },
         (error) => {
-          throw new Error(`Error getting location: ${error.message}`)
-        },
-      )
+          throw new Error(`Error getting location: ${error.message}`);
+        }
+      );
     } catch (error) {
       toast({
         title: "Failed to send emergency alert",
         description: error instanceof Error ? error.message : "Unknown error occurred",
         variant: "destructive",
-      })
+      });
     } finally {
-      setIsActivating(false)
-      setCountdown(3)
-      setIsSending(false)
+      resetButton();
     }
-  }
+  };
+
+  const resetButton = () => {
+    setIsActivating(false);
+    setCountdown(3);
+    setIsSending(false);
+  };
 
   if (isActivating) {
     return (
@@ -129,7 +126,7 @@ export default function EmergencyButton() {
           Cancel
         </button>
       </div>
-    )
+    );
   }
 
   return (
@@ -144,5 +141,5 @@ export default function EmergencyButton() {
         <span className="text-2xl font-bold">EMERGENCY</span>
       </div>
     </button>
-  )
+  );
 }
