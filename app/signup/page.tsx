@@ -1,7 +1,6 @@
-// Add the "use client" directive at the top
-'use client'
+'use client'  // Add the 'use client' directive at the top to ensure it's a client-side component
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/router"
 
 export default function Signup() {
@@ -9,7 +8,13 @@ export default function Signup() {
   const [password, setPassword] = useState("")
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+  const [isClient, setIsClient] = useState(false)  // Track if we're on the client
   const router = useRouter()
+
+  // Set isClient to true when mounted on the client side
+  useEffect(() => {
+    setIsClient(true)
+  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -41,6 +46,11 @@ export default function Signup() {
     } finally {
       setLoading(false)
     }
+  }
+
+  // Render nothing until the component is mounted on the client-side
+  if (!isClient) {
+    return null
   }
 
   return (
