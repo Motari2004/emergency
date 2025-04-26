@@ -1,3 +1,6 @@
+// Add the "use client" directive at the top
+'use client'
+
 import { useState } from "react"
 import { useRouter } from "next/router"
 
