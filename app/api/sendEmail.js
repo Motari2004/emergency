@@ -1,39 +1,48 @@
-export default async function handler(req, res) {
-    if (req.method === 'POST') {
-      const { emergencyMessage, location, contacts, senderEmail } = req.body;
+// /pages/api/sendEmail.ts
+
+import type { NextApiRequest, NextApiResponse } from 'next'
+
+// Dummy email sending function (replace with real email service later)
+async function sendEmail({ contacts, emergencyMessage, location, senderEmail }: {
+  contacts: string[],
+  emergencyMessage: string,
+  location: string,
+  senderEmail: string
+}) {
+  console.log('Sending email...')
+  console.log('From:', senderEmail)
+  console.log('To:', contacts)
+  console.log('Message:', emergencyMessage)
+  console.log('Location:', location)
   
-      try {
-        const promises = contacts.map(async (email) => {
-          const response = await fetch('https://api.saleshandy.com/v1/email/send', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'x-api-key': '4af38d4c958b93c3fc0c436b38bcdf7a',
-            },
-            body: JSON.stringify({
-              to: email,
-              subject: 'Emergency Alert!',
-              body: `Location: ${location}\n\nMessage: ${emergencyMessage}`,
-              sender: senderEmail, // dynamically passed from frontend
-            }),
-          });
+  // Simulate delay (optional)
+  await new Promise(resolve => setTimeout(resolve, 1000))
   
-          const data = await response.json();
-          if (!response.ok) {
-            throw new Error(data.message || 'Failed to send email');
-          }
-          return data;
-        });
-  
-        await Promise.all(promises);
-  
-        res.status(200).json({ message: 'Emails sent successfully' });
-      } catch (error) {
-        console.error('Email sending failed:', error);
-        res.status(500).json({ error: 'Failed to send emails' });
-      }
-    } else {
-      res.status(405).json({ error: 'Method Not Allowed' });
-    }
+  return { success: true }
+}
+
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ message: 'Method Not Allowed' })
   }
-  
+
+  try {
+    const { contacts, emergencyMessage, location, senderEmail } = req.body
+
+    // Basic validation
+    if (!contacts || !Array.isArray(contacts) || contacts.length === 0) {
+      return res.status(400).json({ message: 'No contacts provided' })
+    }
+    if (!emergencyMessage || !location || !senderEmail) {
+      return res.status(400).json({ message: 'Missing required fields' })
+    }
+
+    // Here you can integrate real email sending logic
+    await sendEmail({ contacts, emergencyMessage, location, senderEmail })
+
+    return res.status(200).json({ message: 'Emergency email sent successfully' })
+  } catch (error) {
+    console.error('Error sending emergency email:', error)
+    return res.status(500).json({ message: 'Internal Server Error' })
+  }
+}
