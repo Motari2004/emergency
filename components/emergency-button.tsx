@@ -30,7 +30,7 @@ export default function EmergencyButton() {
     setCountdown(3)
   }
 
-  const sendEmailAlert = async (contacts: any[], location: { latitude: number, longitude: number }) => {
+  const sendEmailAlert = async (emails: string[], location: { latitude: number, longitude: number }) => {
     try {
       const response = await fetch('/api/send-emergency-email', {
         method: 'POST',
@@ -38,7 +38,7 @@ export default function EmergencyButton() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          contacts,
+          emails,
           location,
           message: "Emergency alert: Immediate attention needed.",
         }),
@@ -59,9 +59,23 @@ export default function EmergencyButton() {
     setIsSending(true)
 
     try {
-      const contacts = JSON.parse(localStorage.getItem("emergencyContacts") || "[]")
+      const contacts = JSON.parse(localStorage.getItem("emergencyContacts") || "[]") as { name: string, email: string }[]
+      const userEmail = localStorage.getItem("userEmail")
 
-      if (contacts.length === 0) {
+      if (!userEmail) {
+        toast({
+          title: "No user email found",
+          description: "Please log in or set up your email first",
+          variant: "destructive",
+        })
+        resetState()
+        return
+      }
+
+      const contactEmails = contacts.map(contact => contact.email).filter(email => email)
+      const allEmails = [...contactEmails, userEmail]
+
+      if (allEmails.length === 0) {
         toast({
           title: "No emergency contacts found",
           description: "Please add emergency contacts in settings",
@@ -79,11 +93,11 @@ export default function EmergencyButton() {
         async (position) => {
           const { latitude, longitude } = position.coords
 
-          await sendEmailAlert(contacts, { latitude, longitude })
+          await sendEmailAlert(allEmails, { latitude, longitude })
 
           toast({
             title: "Emergency alert sent",
-            description: `Alert sent to ${contacts.length} emergency contacts`,
+            description: `Alert sent to ${allEmails.length} email(s)`,
           })
           resetState()
         },
