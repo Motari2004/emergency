@@ -1,52 +1,52 @@
-"use client";
+"use client"
 
-import { useState } from "react";
-import { AlertCircle } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { useState } from "react"
+import { AlertCircle } from "lucide-react"
+import { useToast } from "@/hooks/use-toast"
 
 export default function EmergencyButton() {
-  const [isActivating, setIsActivating] = useState(false);
-  const [countdown, setCountdown] = useState(3);
-  const [isSending, setIsSending] = useState(false);
-  const { toast } = useToast();
+  const [isActivating, setIsActivating] = useState(false)
+  const [countdown, setCountdown] = useState(3)
+  const [isSending, setIsSending] = useState(false)
+  const { toast } = useToast()
 
   const handleEmergencyClick = () => {
-    setIsActivating(true);
+    setIsActivating(true)
 
     const timer = setInterval(() => {
       setCountdown((prev) => {
         if (prev <= 1) {
-          clearInterval(timer);
-          triggerEmergency();
-          return 0;
+          clearInterval(timer)
+          triggerEmergency()
+          return 0
         }
-        return prev - 1;
-      });
-    }, 1000);
-  };
+        return prev - 1
+      })
+    }, 1000)
+  }
 
   const cancelEmergency = () => {
-    setIsActivating(false);
-    setCountdown(3);
-  };
+    setIsActivating(false)
+    setCountdown(3)
+  }
 
-  const sendEmailAlert = async (contacts: string[], location: { latitude: number, longitude: number }, senderEmail: string) => {
+  const sendEmailAlert = async (contacts, location) => {
     try {
-      const response = await fetch('/api/sendEmail', {
+      // Call to backend to send emails
+      const response = await fetch('/api/send-email', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          emergencyMessage: "Emergency alert: Immediate attention needed.",
-          location: `Latitude: ${location.latitude}, Longitude: ${location.longitude}`,
-          contacts,
-          senderEmail,
+          contacts: contacts,
+          location: location,
+          message: "Emergency alert: Immediate attention needed.",
         }),
       });
 
       if (!response.ok) {
-        throw new Error('Failed to send emergency email');
+        throw new Error('Failed to send email');
       }
 
       return response.json();
@@ -54,84 +54,59 @@ export default function EmergencyButton() {
       console.error("Error sending email alert:", error);
       throw error;
     }
-  };
+  }
 
   const triggerEmergency = async () => {
-    setIsSending(true);
+    setIsSending(true)
 
     try {
-      // Retrieve data from localStorage
-      const contacts = JSON.parse(localStorage.getItem("emergencyContacts") || "[]") as { name: string, email: string }[];
-      const userEmail = localStorage.getItem("userEmail");
+      const contacts = JSON.parse(localStorage.getItem("emergencyContacts") || "[]")
 
-      // Check if the user email exists
-      if (!userEmail) {
-        toast({
-          title: "No user email found",
-          description: "Please log in or set up your email first",
-          variant: "destructive",
-        });
-        resetState();
-        return;
-      }
-
-      // Extract email addresses from the contacts
-      const contactEmails = contacts.map(contact => contact.email).filter(email => email);
-
-      // Check if there are valid contacts
-      if (contactEmails.length === 0) {
+      if (contacts.length === 0) {
         toast({
           title: "No emergency contacts found",
           description: "Please add emergency contacts in settings",
           variant: "destructive",
-        });
-        resetState();
-        return;
+        })
+        setIsActivating(false)
+        setCountdown(3)
+        setIsSending(false)
+        return
       }
 
-      // If geolocation is available, get location
+      // Get current location
       if (!navigator.geolocation) {
-        throw new Error("Geolocation is not supported by your browser");
+        throw new Error("Geolocation is not supported by your browser")
       }
 
       navigator.geolocation.getCurrentPosition(
         async (position) => {
-          const { latitude, longitude } = position.coords;
+          const { latitude, longitude } = position.coords
 
-          // Send email alert
-          await sendEmailAlert(contactEmails, { latitude, longitude }, userEmail);
+          // Send emergency alert via email
+          await sendEmailAlert(contacts, { latitude, longitude })
 
           toast({
             title: "Emergency alert sent",
-            description: `Alert sent to ${contactEmails.length} contact(s)`,
-          });
-          resetState();
+            description: `Alert sent to ${contacts.length} emergency contacts`,
+          })
         },
         (error) => {
-          console.error(error);
-          toast({
-            title: "Location error",
-            description: `Error getting location: ${error.message}`,
-            variant: "destructive",
-          });
-          resetState();
-        }
-      );
+          throw new Error(`Error getting location: ${error.message}`)
+        },
+      )
     } catch (error) {
       toast({
         title: "Failed to send emergency alert",
         description: error instanceof Error ? error.message : "Unknown error occurred",
         variant: "destructive",
-      });
-      resetState();
+      })
+    } finally {
+      setIsActivating(false)
+      setCountdown(3)
+      setIsSending(false)
     }
-  };
-
-  const resetState = () => {
-    setIsActivating(false);
-    setCountdown(3);
-    setIsSending(false);
-  };
+  }
 
   if (isActivating) {
     return (
@@ -144,7 +119,7 @@ export default function EmergencyButton() {
           Cancel
         </button>
       </div>
-    );
+    )
   }
 
   return (
@@ -159,5 +134,5 @@ export default function EmergencyButton() {
         <span className="text-2xl font-bold">EMERGENCY</span>
       </div>
     </button>
-  );
+  )
 }
