@@ -1,6 +1,9 @@
 import { NextApiRequest, NextApiResponse } from 'next'
 import bcrypt from 'bcryptjs'
+import { PrismaClient } from '@prisma/client'
 import { Pool } from 'pg'
+
+const prisma = new PrismaClient()
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL, // Make sure your .env contains this variable
