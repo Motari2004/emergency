@@ -1,4 +1,12 @@
-// prisma/schema.prisma
+datasource db {
+  provider = "postgresql"  
+  url      = env("DATABASE_URL")  // or another environment variable for your DB URL
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
 
 model User {
   id       Int       @id @default(autoincrement())
