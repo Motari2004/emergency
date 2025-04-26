@@ -30,7 +30,17 @@ export default function EmergencyButton() {
     setCountdown(3)
   }
 
-  const sendEmailAlert = async (contacts, location) => {
+  interface Contact {
+    name: string;
+    email: string;
+  }
+
+  interface Location {
+    latitude: number;
+    longitude: number;
+  }
+
+  const sendEmailAlert = async (contacts: Contact[], location: Location): Promise<any> => {
     try {
       // Call to backend to send emails
       const response = await fetch('/api/send-email', {
