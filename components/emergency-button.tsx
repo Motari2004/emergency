@@ -3,7 +3,6 @@
 import { useState } from "react"
 import { AlertCircle } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
-import { sendEmergencyAlert } from "@/lib/emergency-service"
 
 export default function EmergencyButton() {
   const [isActivating, setIsActivating] = useState(false)
@@ -31,6 +30,31 @@ export default function EmergencyButton() {
     setCountdown(3)
   }
 
+  const sendEmailAlert = async (contacts: any[], location: { latitude: number, longitude: number }) => {
+    try {
+      const response = await fetch('/api/send-emergency-email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          contacts,
+          location,
+          message: "Emergency alert: Immediate attention needed.",
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to send emergency email');
+      }
+
+      return response.json();
+    } catch (error) {
+      console.error("Error sending email alert:", error);
+      throw error;
+    }
+  }
+
   const triggerEmergency = async () => {
     setIsSending(true)
 
@@ -43,13 +67,10 @@ export default function EmergencyButton() {
           description: "Please add emergency contacts in settings",
           variant: "destructive",
         })
-        setIsActivating(false)
-        setCountdown(3)
-        setIsSending(false)
+        resetState()
         return
       }
 
-      // Get current location
       if (!navigator.geolocation) {
         throw new Error("Geolocation is not supported by your browser")
       }
@@ -58,16 +79,23 @@ export default function EmergencyButton() {
         async (position) => {
           const { latitude, longitude } = position.coords
 
-          await sendEmergencyAlert(contacts, { latitude, longitude })
+          await sendEmailAlert(contacts, { latitude, longitude })
 
           toast({
             title: "Emergency alert sent",
             description: `Alert sent to ${contacts.length} emergency contacts`,
           })
+          resetState()
         },
         (error) => {
-          throw new Error(`Error getting location: ${error.message}`)
-        },
+          console.error(error)
+          toast({
+            title: "Location error",
+            description: `Error getting location: ${error.message}`,
+            variant: "destructive",
+          })
+          resetState()
+        }
       )
     } catch (error) {
       toast({
@@ -75,11 +103,14 @@ export default function EmergencyButton() {
         description: error instanceof Error ? error.message : "Unknown error occurred",
         variant: "destructive",
       })
-    } finally {
-      setIsActivating(false)
-      setCountdown(3)
-      setIsSending(false)
+      resetState()
     }
+  }
+
+  const resetState = () => {
+    setIsActivating(false)
+    setCountdown(3)
+    setIsSending(false)
   }
 
   if (isActivating) {
