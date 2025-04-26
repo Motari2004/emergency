@@ -9,16 +9,15 @@ import { useToast } from "@/hooks/use-toast"
 type Contact = {
   id: string
   name: string
-  phone: string
+  email: string
 }
 
 export default function ContactForm() {
   const [contacts, setContacts] = useState<Contact[]>([])
-  const [newContact, setNewContact] = useState({ name: "", phone: "" })
+  const [newContact, setNewContact] = useState({ name: "", email: "" })
   const { toast } = useToast()
 
   useEffect(() => {
-    // Load contacts from localStorage on component mount
     const savedContacts = localStorage.getItem("emergencyContacts")
     if (savedContacts) {
       try {
@@ -30,28 +29,27 @@ export default function ContactForm() {
   }, [])
 
   useEffect(() => {
-    // Save contacts to localStorage whenever they change
     localStorage.setItem("emergencyContacts", JSON.stringify(contacts))
   }, [contacts])
 
   const addContact = (e: React.FormEvent) => {
     e.preventDefault()
 
-    if (!newContact.name.trim() || !newContact.phone.trim()) {
+    if (!newContact.name.trim() || !newContact.email.trim()) {
       toast({
         title: "Invalid contact",
-        description: "Both name and phone number are required",
+        description: "Both name and email address are required",
         variant: "destructive",
       })
       return
     }
 
-    // Basic phone number validation
-    const phoneRegex = /^\+?[0-9\s\-()]{7,15}$/
-    if (!phoneRegex.test(newContact.phone)) {
+    // Basic email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(newContact.email)) {
       toast({
-        title: "Invalid phone number",
-        description: "Please enter a valid phone number",
+        title: "Invalid email address",
+        description: "Please enter a valid email address",
         variant: "destructive",
       })
       return
@@ -59,7 +57,7 @@ export default function ContactForm() {
 
     const newId = Date.now().toString()
     setContacts([...contacts, { ...newContact, id: newId }])
-    setNewContact({ name: "", phone: "" })
+    setNewContact({ name: "", email: "" })
 
     toast({
       title: "Contact added",
@@ -95,7 +93,7 @@ export default function ContactForm() {
             <li key={contact.id} className="flex justify-between items-center bg-gray-50 p-3 rounded-md">
               <div>
                 <div className="font-medium">{contact.name}</div>
-                <div className="text-gray-600 text-sm">{contact.phone}</div>
+                <div className="text-gray-600 text-sm">{contact.email}</div>
               </div>
               <button
                 onClick={() => removeContact(contact.id)}
@@ -125,16 +123,16 @@ export default function ContactForm() {
         </div>
 
         <div>
-          <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">
-            Phone Number
+          <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+            Email Address
           </label>
           <input
-            type="tel"
-            id="phone"
-            value={newContact.phone}
-            onChange={(e) => setNewContact({ ...newContact, phone: e.target.value })}
+            type="email"
+            id="email"
+            value={newContact.email}
+            onChange={(e) => setNewContact({ ...newContact, email: e.target.value })}
             className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            placeholder="+1 (555) 123-4567"
+            placeholder="example@email.com"
           />
         </div>
 
