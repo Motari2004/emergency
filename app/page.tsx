@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { AlertTriangle } from "lucide-react";
 import { useState } from "react";
-import Swal from "sweetalert2";
 
 export default function Home() {
   const [isSending, setIsSending] = useState(false);
@@ -11,21 +10,13 @@ export default function Home() {
   const handleEmergencyClick = async () => {
     const saved = localStorage.getItem("emergencyContacts");
     if (!saved) {
-      Swal.fire({
-        icon: "warning",
-        title: "No contacts found",
-        text: "Please configure your emergency contacts first!",
-      });
+      alert("No emergency contacts saved. Please configure contacts first.");
       return;
     }
 
     const contacts: string[] = JSON.parse(saved);
     if (contacts.length === 0) {
-      Swal.fire({
-        icon: "warning",
-        title: "No contacts",
-        text: "Please add at least one emergency contact.",
-      });
+      alert("No emergency contacts found. Please add some contacts.");
       return;
     }
 
@@ -38,32 +29,19 @@ export default function Home() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          message: "🚨 Emergency! Please help me immediately!",
+          message: "Emergency! Please help me immediately!",
           contacts,
         }),
       });
 
       if (response.ok) {
-        Swal.fire({
-          icon: "success",
-          title: "SMS Sent!",
-          text: "Your emergency contacts have been alerted successfully.",
-          confirmButtonColor: "#3085d6",
-        });
+        alert("Emergency SMS sent successfully!");
       } else {
-        Swal.fire({
-          icon: "error",
-          title: "Failed!",
-          text: "Could not send the emergency SMS. Try again.",
-        });
+        alert("Failed to send SMS. Please try again.");
       }
     } catch (error) {
       console.error(error);
-      Swal.fire({
-        icon: "error",
-        title: "Error!",
-        text: "Something went wrong while sending SMS.",
-      });
+      alert("An error occurred while sending SMS.");
     } finally {
       setIsSending(false);
     }
