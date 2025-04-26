@@ -30,28 +30,29 @@ export default function EmergencyButton() {
     setCountdown(3)
   }
 
-  const sendEmailAlert = async (emails: string[], location: { latitude: number, longitude: number }) => {
+  const sendEmailAlert = async (contacts: string[], location: { latitude: number, longitude: number }, senderEmail: string) => {
     try {
-      const response = await fetch('/api/send-emergency-email', {
+      const response = await fetch('/api/sendEmail', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          emails,
-          location,
-          message: "Emergency alert: Immediate attention needed.",
+          emergencyMessage: "Emergency alert: Immediate attention needed.",
+          location: `Latitude: ${location.latitude}, Longitude: ${location.longitude}`,
+          contacts,
+          senderEmail,
         }),
-      });
+      })
 
       if (!response.ok) {
-        throw new Error('Failed to send emergency email');
+        throw new Error('Failed to send emergency email')
       }
 
-      return response.json();
+      return response.json()
     } catch (error) {
-      console.error("Error sending email alert:", error);
-      throw error;
+      console.error("Error sending email alert:", error)
+      throw error
     }
   }
 
@@ -73,9 +74,8 @@ export default function EmergencyButton() {
       }
 
       const contactEmails = contacts.map(contact => contact.email).filter(email => email)
-      const allEmails = [...contactEmails, userEmail]
 
-      if (allEmails.length === 0) {
+      if (contactEmails.length === 0) {
         toast({
           title: "No emergency contacts found",
           description: "Please add emergency contacts in settings",
@@ -93,11 +93,11 @@ export default function EmergencyButton() {
         async (position) => {
           const { latitude, longitude } = position.coords
 
-          await sendEmailAlert(allEmails, { latitude, longitude })
+          await sendEmailAlert(contactEmails, { latitude, longitude }, userEmail)
 
           toast({
             title: "Emergency alert sent",
-            description: `Alert sent to ${allEmails.length} email(s)`,
+            description: `Alert sent to ${contactEmails.length} contact(s)`,
           })
           resetState()
         },

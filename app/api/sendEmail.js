@@ -1,6 +1,6 @@
 export default async function handler(req, res) {
     if (req.method === 'POST') {
-      const { emergencyMessage, location, contacts } = req.body;
+      const { emergencyMessage, location, contacts, senderEmail } = req.body;
   
       try {
         const promises = contacts.map(async (email) => {
@@ -8,13 +8,13 @@ export default async function handler(req, res) {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
-              'x-api-key': '4af38d4c958b93c3fc0c436b38bcdf7a',  // Your API Key here
+              'x-api-key': '4af38d4c958b93c3fc0c436b38bcdf7a',
             },
             body: JSON.stringify({
               to: email,
               subject: 'Emergency Alert!',
               body: `Location: ${location}\n\nMessage: ${emergencyMessage}`,
-              sender: 'hopefreymosingi1@gmail.com', // your verified sender email in Saleshandy
+              sender: senderEmail, // dynamically passed from frontend
             }),
           });
   
