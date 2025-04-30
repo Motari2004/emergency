@@ -1,6 +1,7 @@
 import Link from "next/link"
 import EmergencyButton from "@/components/emergency-button"
 import { AlertTriangle } from "lucide-react"
+import { Analytics } from "@vercel/analytics/react"
 
 export default function Home() {
   return (
