@@ -15,9 +15,7 @@ A modern web application for reporting and managing emergency incidents in real-
 - **Database/ORM**: Prisma
 - **Deployment**: Vercel
 
-## Live Demo
-https://emergency-beryl.vercel.app  
-(Note: Currently under development / fixing deployment issues)
+
 
 ## Setup (local development)
 1. Clone the repo  
